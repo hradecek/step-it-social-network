@@ -10,43 +10,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import cz.stepit.social.repository.MemberRepository;
+import cz.stepit.social.service.MemberNotFoundException;
+import cz.stepit.social.service.MemberService;
+import cz.stepit.social.service.SelfFriendException;
 
 @Controller
 @RequestMapping("/member/{id}")
 public class MemberController {
 
-    protected final MemberRepository memberRepository;
+    protected final MemberService memberService;
 
     /**
      * Constructor.
      *
-     * @param memberRepository {@link MemberRepository}
+     * @param memberService {@link cz.stepit.social.service.MemberService}
      */
-    public MemberController(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public MemberController(MemberService memberService) {
+        this.memberService = memberService;
     }
 
     @GetMapping("/friends")
     public String listFriends(@PathVariable long id, Model model) {
-        final var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(id));
-        model.addAttribute("member", member);
+        model.addAttribute("member", memberService.getMember(id));
         return "friends";
     }
 
     @PostMapping("/addFriend")
     public  String addFriend(@PathVariable long id, @RequestParam long friendId, RedirectAttributes redirectAttributes) {
-        final var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(id));
-        final var friend = memberRepository.findById(friendId).orElseThrow(() -> new MemberNotFoundException(friendId));
-        member.addFriend(friend);
-        memberRepository.save(member);
+        memberService.addFriend(id, friendId);
 
         redirectAttributes.addFlashAttribute("info", "Added friend");
         return "redirect:/member/{id}/friends";
     }
 
-    @ExceptionHandler(MemberNotFoundException.class)
-    public String handleError(Model model, MemberNotFoundException ex) {
+    @ExceptionHandler({MemberNotFoundException.class, SelfFriendException.class})
+    public String handleError(Model model, Throwable ex) {
         model.addAttribute("error", ex.getMessage());
         return "error";
     }

@@ -48,7 +48,7 @@ public class Member {
      * @param friend friend to be added
      */
     public void addFriend(Member friend) {
-        Friendship friendship = new Friendship(this, friend);
+        final var friendship = new Friendship(this, friend);
         friendships.add(friendship);
     }
 

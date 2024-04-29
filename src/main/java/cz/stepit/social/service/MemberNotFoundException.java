@@ -1,15 +1,12 @@
-package cz.stepit.social.controller;
+package cz.stepit.social.service;
 
 public class MemberNotFoundException extends RuntimeException {
 
-    protected final long id;
-
     public MemberNotFoundException(long id) {
         super("Member with ID " + id + " not found");
-        this.id = id;
     }
 
-    public long getMemberId() {
-        return id;
+    public MemberNotFoundException(String username) {
+        super("Member with username " + username + " not found");
     }
 }
