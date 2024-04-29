@@ -20,6 +20,11 @@ public class MemberService {
         return memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(id));
     }
 
+    @Transactional(readOnly = true)
+    public Member getMemberByUsername(String username) {
+        return memberRepository.findByUsername(username).orElseThrow(() -> new MemberNotFoundException(username));
+    }
+
     @Transactional
     public void addFriend(long id, long friendId) {
         if (id == friendId) {

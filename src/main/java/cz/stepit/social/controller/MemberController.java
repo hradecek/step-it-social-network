@@ -1,5 +1,6 @@
 package cz.stepit.social.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +30,7 @@ public class MemberController {
         this.memberService = memberService;
     }
 
+    @PreAuthorize("@securityService.isOwner(#id)")
     @GetMapping("/friends")
     public String listFriends(@PathVariable long id, Model model) {
         model.addAttribute("member", memberService.getMember(id));
