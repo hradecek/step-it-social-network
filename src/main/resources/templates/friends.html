@@ -14,10 +14,24 @@
       <div th:text="${info}"></div>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    <div class="d-flex align-items-center mb-4">
+      <img th:src="${avatarUri}" class="rounded-circle me-3 border border-primary" alt="Avatar Image" width="100" height="100">
+      <h2 th:text="${member.username}"></h2>
+    </div>
+    <div class="mb-4">
+      <form th:action="@{/member/{id}/avatar(id=${member.id})}" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <input type="file" class="form-control" id="avatar" name="avatar" placeholder="Select avatar image" accept="image/jpeg, image/png">
+        </div>
+        <button type="submit" class="btn btn-primary">Change avatar</button>
+      </form>
+    </div>
+    <hr>
     <main>
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFriendModal">
         Add friend
       </button>
+      <a class="btn btn-primary" th:href="@{/member/{id}/chat(id=${member.id})}">Chat</a>
       <div class="modal fade" id="addFriendModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">

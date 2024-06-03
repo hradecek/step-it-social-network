@@ -1,23 +1,21 @@
 package cz.stepit.social.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import cz.stepit.social.entities.Member;
-import cz.stepit.social.repository.MemberRepository;
 
 import javax.sql.DataSource;
 
@@ -35,7 +33,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers(antMatcher("/h2-console/**")).permitAll()
-                            .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .formLogin(withDefaults())
@@ -51,28 +49,30 @@ public class SecurityConfiguration {
     public void configure(
             AuthenticationManagerBuilder authenticationManagerBuilder,
             DataSource dataSource,
-            PasswordEncoder passwordEncoder
-    ) throws Exception {
+            PasswordEncoder passwordEncoder,
+            @Value("${spring.jpa.hibernate.ddl-auto}") String ddlAuto) throws Exception {
 
-        authenticationManagerBuilder
+        final var builder = authenticationManagerBuilder
                 .jdbcAuthentication()
                 .dataSource(dataSource)
                 .passwordEncoder(passwordEncoder);
+
+        if (ddlAuto.contains("drop")) {
+            dropSchema(dataSource);
+        }
+        if (ddlAuto.contains("create")) {
+            builder.withDefaultSchema();
+        }
     }
 
     @Bean
-    public UserDetailsService userDetailsService(MemberRepository memberRepository, DataSource dataSource, PasswordEncoder passwordEncoder) {
-        final var userDetailsManager = new JdbcUserDetailsManager(dataSource);
-        createUser("ivo", memberRepository, passwordEncoder, userDetailsManager);
-        createUser("joe", memberRepository, passwordEncoder, userDetailsManager);
-        return userDetailsManager;
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
     }
 
-    protected void createUser(String username, MemberRepository memberRepository, PasswordEncoder passwordEncoder, JdbcUserDetailsManager userDetailsManager) {
-        final var user = User.builder().username(username).password(passwordEncoder.encode("admin")).roles("MEMBER").build();
-        userDetailsManager.deleteUser(username);
-        memberRepository.findByUsername(username).ifPresent(member -> memberRepository.deleteById(member.getId()));
-        userDetailsManager.createUser(user);
-        memberRepository.save(new Member(username));
+    protected void dropSchema(DataSource dataSource) {
+        final var jdbcTemplate = new JdbcTemplate(dataSource);
+        jdbcTemplate.execute("DROP TABLE IF EXISTS AUTHORITIES");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS USERS");
     }
 }

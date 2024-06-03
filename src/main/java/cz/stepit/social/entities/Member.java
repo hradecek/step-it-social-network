@@ -10,6 +10,7 @@ import jakarta.persistence.OneToMany;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents
@@ -21,8 +22,11 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(unique = true)
+    @Column(name = "name", unique = true)
     private String username;
+
+    @Column(name = "avatar_uri")
+    private String avatarUri;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Friendship> friendships = new ArrayList<>();
@@ -77,5 +81,23 @@ public class Member {
      */
     public List<Friendship> getFriendships() {
         return friendships;
+    }
+
+    /**
+     * Get user's avatar image.
+     *
+     * @return avatar image URI
+     */
+    public Optional<String> getAvatarUri() {
+        return Optional.ofNullable(avatarUri);
+    }
+
+    /**
+     * Sets user's avatar image.
+     *
+     * @param avatarUri image URI
+     */
+    public void setAvatarUri(String avatarUri) {
+        this.avatarUri = avatarUri;
     }
 }

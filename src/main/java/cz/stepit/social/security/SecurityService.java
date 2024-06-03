@@ -1,7 +1,5 @@
 package cz.stepit.social.security;
 
-//import org.springframework.security.core.context.SecurityContextHolder;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
